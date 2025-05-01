@@ -1,0 +1,13 @@
+{
+  "name": "research-backend-test",
+  "version": "1.0.0",
+  "description": "Test script for Research App backend",
+  "main": "testSendResearchQuery.js",
+  "scripts": {
+    "test": "node testSendResearchQuery.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+} 
+ 

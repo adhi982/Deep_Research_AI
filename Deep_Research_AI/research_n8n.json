@@ -1,0 +1,2538 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "055cedaa-a313-4625-a41c-7e7f9560b7a3",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4111c858-c1d8-4dfd-b47d-3462fb0f4329",
+      "name": "Webhook",
+      "webhookId": "055cedaa-a313-4625-a41c-7e7f9560b7a3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the following query from the user, ask some follow up questions to clarify the research direction. Return a maximum of 3 questions, but feel free to return less if the original query is clear: <query>{{ $json.prompt }}</query>`",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=You are an expert researcher. Today is {{ $now.toLocaleString() }}. Follow these instructions when responding:   - You may be asked to research subjects that is after your knowledge cutoff, assume the user is right when presented with news.   - The user is a highly experienced analyst, no need to simplify it, be as detailed as possible and make sure your response is correct.   - Be highly organized.   - Suggest solutions that I didn't think about.   - Be proactive and anticipate my needs.   - Treat me as an expert in all subject matter.   - Mistakes erode my trust, so be accurate and thorough.   - Provide detailed explanations, I'm comfortable with lots of detail.   - Value good arguments over authorities, the source is irrelevant.   - Consider new technologies and contrarian ideas, not just the conventional wisdom.   - You may use high levels of speculation or prediction, just flag it for me."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        520,
+        0
+      ],
+      "id": "4f027935-213e-4e53-b859-36eebd2c976d",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "waitBetweenTries": 200
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "39b4c848-19b3-46df-8247-a4259695a372",
+              "name": "prompt",
+              "value": "={{ $json.body.query }}",
+              "type": "string"
+            },
+            {
+              "id": "2a58ab23-ee3d-4bfb-8402-e646f959ec97",
+              "name": "depth",
+              "value": "={{ $json.body.depth }}",
+              "type": "string"
+            },
+            {
+              "id": "c11913b0-43f1-4bee-a0bb-26c7d9ca5730",
+              "name": "breadth",
+              "value": "={{ $json.body.breadth }}",
+              "type": "string"
+            },
+            {
+              "id": "76d9db5d-b907-4904-b6bc-f98b1bfcc64c",
+              "name": "tech_term",
+              "value": "={{ $json.body.include_technical_terms }}",
+              "type": "string"
+            },
+            {
+              "id": "8765302c-792b-408d-a050-c7d4a6dab092",
+              "name": "output_type",
+              "value": "={{ $json.body.output_format }}",
+              "type": "string"
+            },
+            {
+              "id": "22fd91d8-cedc-48a1-bdae-45434dc7924f",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "46ff45b3-62ea-4173-8e11-34cfafa88b53",
+              "name": "research_id",
+              "value": "={{ $json.body.research_id }}",
+              "type": "string"
+            },
+            {
+              "id": "03e8f415-6d1d-4d38-9cae-b4834436502b",
+              "name": "agent",
+              "value": "={{ $json.body.agent }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "fbd94755-b61c-492f-94f9-927b26974194",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        480,
+        220
+      ],
+      "id": "51d0906d-ff89-4331-9c94-84191425cd38",
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "FUBpPeLJ2cTPaB5B",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XlDtaOf3AgIkpVJ9",
+          "mode": "list",
+          "cachedResultName": "My workflow 2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "=initiate",
+            "q&a": "={{ $('Basic LLM Chain').item.json.output.questions }}",
+            "question_id": "={{ $('QuestionId generator').item.json.question_id }}",
+            "research_id": "={{ $('Webhook').item.json.body.research_id }}",
+            "user_id": "={{ $('Webhook').item.json.body.user_id }}",
+            "user_prompts": "={{ $('Webhook').item.json.body.query }}",
+            "depth": "={{ $('Webhook').item.json.body.depth }}",
+            "include_technical_terms": "={{ $('Webhook').item.json.body.include_technical_terms }}",
+            "breadth": "={{ $('Webhook').item.json.body.breadth }}",
+            "output_format": "={{ $('Webhook').item.json.body.output_format }}",
+            "research_agent": "={{ $('Webhook').item.json.body.agent }}",
+            "learnings": "[]"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "q&a",
+              "displayName": "q&a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array"
+            },
+            {
+              "id": "question_id",
+              "displayName": "question_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "research_id",
+              "displayName": "research_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "user_prompts",
+              "displayName": "user_prompts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "depth",
+              "displayName": "depth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "breadth",
+              "displayName": "breadth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "include_technical_terms",
+              "displayName": "include_technical_terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "output_format",
+              "displayName": "output_format",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "research_agent",
+              "displayName": "research_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "learnings",
+              "displayName": "learnings",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array"
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2220,
+        0
+      ],
+      "id": "05a8f10c-99dc-4891-a3d7-cdc7b4a59fac",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_questions_array",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"question_id\": \"{{ $json.question_id }}\",\n  \"research_id\": \"{{$('Edit Fields').first().json.research_id}}\",\n  \"user_id\": \"{{$('Edit Fields').first().json.user_id}}\",\n  \"questions\": \n    {{ JSON.stringify($('Basic LLM Chain').first().json.output.questions) }}\n  ,\n  \"answers\": [],\n  \"reply_webhook_url\": \"{{$execution.resumeUrl}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        0
+      ],
+      "id": "2e9b2517-bfbc-4d75-8bb8-2b1df24e31ec",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"questions\": {\n      \"type\": \"array\",\n      \"description\": \"Follow up questions to clarify the research direction.\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\",\n            \"description\": \"Unique identifier for the question\"\n          },\n          \"text\": {\n            \"type\": \"string\",\n            \"description\": \"The question text\"\n          },\n          \"answered\": {\n            \"type\": \"boolean\",\n            \"description\": \"Whether the question has been answered\",\n            \"default\": false\n          }\n        },\n        \"required\": [\"id\", \"text\", \"answered\"]\n      }\n    }\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        740,
+        220
+      ],
+      "id": "72683049-20e8-4f22-93b9-d430fc0dc311",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_progress_new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"progress_id\": \"{{ $json.progress_Id }}\",\n  \"research_id\": \"{{ $('Wait').item.json.body.research_id }}\",\n  \"user_id\": \"{{ $('Wait').item.json.body.user_id }}\",\n  \"topic\": \"Firing up the research\",\n  \"links\": []\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        0
+      ],
+      "id": "7e8df6bf-eb12-43fb-ab0a-a9599ee357d2",
+      "name": "Start research"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate Question ID Function Node\nconst questionId = `question-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;\nreturn { question_id: questionId };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        0
+      ],
+      "id": "598fad7e-32ce-47c6-adab-0c4e23513851",
+      "name": "QuestionId generator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate Question ID Function Node\nconst progressId = `topic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;\nreturn { progress_Id: progressId };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        0
+      ],
+      "id": "fb54c591-8698-4806-80e9-1e743da714dc",
+      "name": "ProgressId generator"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "type"
+            },
+            {
+              "name": "q&a",
+              "type": "array"
+            },
+            {
+              "name": "question_id"
+            },
+            {
+              "name": "research_id"
+            },
+            {
+              "name": "user_id"
+            },
+            {
+              "name": "user_prompts"
+            },
+            {
+              "name": "depth",
+              "type": "number"
+            },
+            {
+              "name": "breadth",
+              "type": "number"
+            },
+            {
+              "name": "include_technical_terms"
+            },
+            {
+              "name": "output_format"
+            },
+            {
+              "name": "research_agent"
+            },
+            {
+              "name": "learnings",
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -660,
+        980
+      ],
+      "id": "7c354ec0-7e6f-4bc6-9e6f-c686f481d453",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "initiate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "initiate"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a67642b0-0008-493d-9875-328d6d06c522",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "research",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "research"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e4a327bd-60e5-4ba4-ad53-d8697a969292",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "report",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "report"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -440,
+        980
+      ],
+      "id": "040b72b9-c923-4023-a31f-b2cae0647b5d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the following prompt from the user, generate a list of SERP queries to research the topic.\nReduce the number of words in each query to its keywords only.\nReturn a maximum of {{ $('When Executed by Another Workflow').item.json.breadth }} queries, but feel free to return less if the original prompt is clear. Make sure each query is unique and not similar to each other: <prompt>{{ $('Switch').item.json.user_prompts }}</prompt>\nlearnings we already know:\n\n{{\n$json.learnings.length\n  ? `Here are some learnings from previous research, use them to generate more specific queries and not repeated:\\n${$('Switch').item.json.data.learnings.map(text => `* ${text}`).join('\\n')}`\n  : ''\n}}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=You are an expert researcher in field of {{ $json.research_agent }}. Today is {{ $now.toLocaleString() }}. Follow these instructions when responding:   - You may be asked to research subjects that is after your knowledge cutoff, assume the user is right when presented with news.   - The user is a highly experienced analyst, no need to simplify it, be as detailed as possible and make sure your response is correct.   - Be highly organized.   - Suggest solutions that I didn't think about.   - Be proactive and anticipate my needs.   - Treat me as an expert in all subject matter.   - Mistakes erode my trust, so be accurate and thorough.   - Provide detailed explanations, I'm comfortable with lots of detail.   - Value good arguments over authorities, the source is irrelevant.   - Consider new technologies and contrarian ideas, not just the conventional wisdom.   - You may use high levels of speculation or prediction, just flag it for me."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -140,
+        980
+      ],
+      "id": "f2d7fe72-9638-42b3-bc31-b14dfb966113",
+      "name": "queries generator"
+    },
+    {
+      "parameters": {
+        "model": "mistral-small-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        1180
+      ],
+      "id": "0563400a-9a2c-490f-815f-7e8d0121610e",
+      "name": "Mistral Cloud Chat Model1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "FUBpPeLJ2cTPaB5B",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.queries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1080
+      ],
+      "id": "b87b7db4-350c-49dc-b9c8-13467473a0eb",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {},
+      "id": "12e666cc-3867-4413-ba01-652253c86a53",
+      "name": "Item Ref",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        980,
+        1220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3cc2e80a-0816-4ccd-be69-334eb2b2446a",
+      "name": "For Each Query...",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        780,
+        1100
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1de40158-338b-4db3-9e22-6fd63b21f825",
+              "name": "ResearchGoal",
+              "type": "string",
+              "value": "={{ $('Item Ref').first().json.researchGoal }}"
+            },
+            {
+              "id": "9f59a2d4-5e5a-4d0b-8adf-2832ce746f0f",
+              "name": "learnings",
+              "type": "array",
+              "value": "={{ [] }}"
+            },
+            {
+              "id": "972ab5f5-0537-4755-afcb-d1db4f09ad60",
+              "name": "followUpQuestions",
+              "type": "array",
+              "value": "={{ [] }}"
+            },
+            {
+              "id": "90cef471-76b0-465d-91a4-a0e256335cd3",
+              "name": "urls",
+              "type": "array",
+              "value": "={{ [] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d93e2ea4-6a13-435e-b092-6e2310b28ae1",
+      "name": "Empty Response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3220,
+        1440
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1ef1039a-4792-47f9-860b-d2ffcffd7129",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1cef15-4d47-4c4d-a5be-0ed131488c7d",
+      "name": "Has Content?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2660,
+        1340
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "2ec65f80-318d-4d0f-9604-ffef833a0f71",
+      "name": "Combine & Send back to Loop",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        1060,
+        940
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c41592db-f9f0-4228-b6d8-0514c9a21fca",
+              "name": "markdown",
+              "type": "string",
+              "value": "={{ $('HTTP Request5').item.json.results[0].raw_content }}"
+            },
+            {
+              "id": "5579a411-94dc-4b10-a276-24adf775be1d",
+              "name": "url",
+              "type": "string",
+              "value": "={{ $('fetch url').item.json.organicResults[0].url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4a2c08ef-34dc-4da2-8e43-918a481de4a1",
+      "name": "Get Markdown + URL1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3280,
+        1220
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"queries\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"query\": {\n            \"type\": \"string\",\n            \"description\": \"The SERP query\"\n          },\n          \"researchGoal\": {\n            \"type\": \"string\",\n            \"description\": \"First talk about the goal of the research that this query is meant to accomplish, then go deeper into how to advance the research once the results are found, mention additional research directions. Be as specific as possible, especially for additional research directions.\"\n          }\n        }\n      }\n    }\n  }\n}"
+      },
+      "id": "58022edf-9eb1-4c37-8a84-131eece1fdec",
+      "name": "Structured Output Parser2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        60,
+        1200
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $workflow.id }}",
+          "cachedResultName": "={{ $workflow.id }}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "report",
+            "breadth": "={{ $('When Executed by Another Workflow').item.json.breadth }}",
+            "depth": "={{ $('When Executed by Another Workflow').item.json.depth }}",
+            "q&a": "={{ $('Switch').item.json['q&a'] }}",
+            "research_id": "={{ $('When Executed by Another Workflow').item.json.research_id }}",
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+            "user_prompts": "={{ $('When Executed by Another Workflow').item.json.user_prompts }}",
+            "include_technical_terms": "={{ $('When Executed by Another Workflow').item.json.include_technical_terms }}",
+            "output_format": "={{ $('When Executed by Another Workflow').item.json.output_format }}",
+            "research_agent": "={{ $('When Executed by Another Workflow').item.json.research_agent }}",
+            "learnings": "={{ $('Generate Learnings1').item.json.data[0].learnings }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "q&a",
+              "displayName": "q&a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "question_id",
+              "displayName": "question_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "research_id",
+              "displayName": "research_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_prompts",
+              "displayName": "user_prompts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "depth",
+              "displayName": "depth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "breadth",
+              "displayName": "breadth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "include_technical_terms",
+              "displayName": "include_technical_terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_format",
+              "displayName": "output_format",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "research_agent",
+              "displayName": "research_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "learnings",
+              "displayName": "learnings",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "66d46064-157a-4f12-bbdc-e7d4d421842d",
+      "name": "Generate Report",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        560
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "acb41e93-70c6-41a3-be0f-e5a74ec3ec88",
+              "name": "query",
+              "type": "string",
+              "value": "={{ $('When Executed by Another Workflow').item.json.user_prompts }}"
+            },
+            {
+              "id": "7fc54063-b610-42bc-a250-b1e8847c4d1e",
+              "name": "learnings",
+              "type": "array",
+              "value": "=[]"
+            },
+            {
+              "id": "e8f1c158-56fb-41c8-8d86-96add16289bb",
+              "name": "breadth",
+              "type": "number",
+              "value": "={{ $('When Executed by Another Workflow').item.json.breadth }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d250c93-9d61-46ad-a215-d687cf966603",
+      "name": "Set Initial Query1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        180,
+        560
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db509e90-9a86-431f-8149-4094d22666cc",
+              "name": "should_stop",
+              "type": "boolean",
+              "value": "={{\n$runIndex+1 >=$('Switch').item.json.depth\n}}"
+            },
+            {
+              "id": "90986e2b-8aca-4a22-a9db-ed8809d6284d",
+              "name": "all_learnings",
+              "type": "array",
+              "value": "={{\nArray($runIndex+1)\n  .fill(0)\n  .flatMap((_,idx) => {\n    try {\n      return $('Generate Learnings1')\n        .all(0,idx)\n        .flatMap(item => item.json.data.flatMap(d => d.learnings))\n    } catch (e) {\n      return []\n    }\n  })\n}}"
+            },
+            {
+              "id": "3eade958-e8ab-4975-aac4-f4a4a983c163",
+              "name": "all_urls",
+              "type": "array",
+              "value": "={{\nArray($runIndex+1)\n  .fill(0)\n  .flatMap((_,idx) => {\n    try {\n      return $('Generate Learnings1')\n        .all(0,idx)\n        .flatMap(item => item.json.data.flatMap(d => d.urls))\n    } catch (e) {\n      return []\n    }\n  })\n}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbb0d905-5640-478c-be35-82e81113a447",
+      "name": "Accumulate Results2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        560,
+        560
+      ],
+      "executeOnce": true,
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $('Generate Learnings1').item.json }}",
+        "options": {}
+      },
+      "id": "b85ac5ba-3c4d-4bda-a30b-e7324f3ac740",
+      "name": "DeepResearch Results1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        920,
+        740
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "8b668008-2db6-4c66-a213-d945c8c25cf3",
+      "name": "Results to Items1",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1200,
+        760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d88bfe95-9e73-4d25-b45c-9f164b940b0e",
+              "name": "query",
+              "type": "string",
+              "value": "=Previous research goal: {{ $json.researchGoal }}\nFollow-up research directions: {{ $json.followUpQuestions.map(q => `\\n${q}`).join('') }}"
+            },
+            {
+              "id": "4aa20690-d998-458a-b1e4-0d72e6a68e6b",
+              "name": "learnings",
+              "type": "array",
+              "value": "={{ $('Accumulate Results2').item.json.all_learnings }}"
+            },
+            {
+              "id": "89acafae-b04a-4d5d-b08b-656e715654e4",
+              "name": "breadth",
+              "type": "number",
+              "value": "={{ $('Switch').first().json.data.breadth }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5fa5786-3229-48b4-a78c-69678eab4dfc",
+      "name": "Set Next Queries1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1420,
+        760
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "75d18d88-6ba6-43df-bef7-3e8ad99ad8bd",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.should_stop }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ef4415b4-571f-444d-840c-865078502917",
+      "name": "Is Depth Reached?1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        720,
+        560
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "90b3da00-dcd5-4289-bd45-953146a3b0ba",
+              "name": "all_learnings",
+              "type": "array",
+              "value": "={{ $json.all_learnings }}"
+            },
+            {
+              "id": "623dbb3d-83a1-44a9-8ad3-48d92bc42811",
+              "name": "all_urls",
+              "type": "array",
+              "value": "={{ $json.all_urls }}"
+            },
+            {
+              "id": "2d42ff0e-7ee1-4968-82d5-867d62096539",
+              "name": "depth",
+              "value": "={{ $('When Executed by Another Workflow').item.json.data.depth }}",
+              "type": "string"
+            },
+            {
+              "id": "3fda1f71-3cd9-4c74-971a-f7b6df7e0de9",
+              "name": "breadth",
+              "value": "={{ $('When Executed by Another Workflow').item.json.data.breadth }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e040624e-0464-4c35-82ff-8bd4df94741f",
+      "name": "Get Research Results1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        920,
+        560
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $workflow.id }}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "research",
+            "breadth": "={{ $('When Executed by Another Workflow').item.json.breadth }}",
+            "depth": "={{ $('When Executed by Another Workflow').item.json.depth }}",
+            "q&a": "={{ $('When Executed by Another Workflow').item.json['q&a'] }}",
+            "question_id": "={{ $('When Executed by Another Workflow').item.json.question_id }}",
+            "research_id": "={{ $('When Executed by Another Workflow').item.json.research_id }}",
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+            "user_prompts": "={{ $('When Executed by Another Workflow').item.json.user_prompts }}",
+            "include_technical_terms": "={{ $('When Executed by Another Workflow').item.json.include_technical_terms }}",
+            "output_format": "={{ $('When Executed by Another Workflow').item.json.output_format }}",
+            "research_agent": "={{ $('When Executed by Another Workflow').item.json.research_agent }}",
+            "learnings": "={{ $('When Executed by Another Workflow').item.json.learnings }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "q&a",
+              "displayName": "q&a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "question_id",
+              "displayName": "question_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "research_id",
+              "displayName": "research_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_prompts",
+              "displayName": "user_prompts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "depth",
+              "displayName": "depth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "breadth",
+              "displayName": "breadth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "include_technical_terms",
+              "displayName": "include_technical_terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_format",
+              "displayName": "output_format",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "research_agent",
+              "displayName": "research_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "learnings",
+              "displayName": "learnings",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "75264de0-b7bd-4790-9a7a-7efbb6c9a28b",
+      "name": "Generate Learnings1",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        380,
+        560
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        120,
+        1920
+      ],
+      "id": "a1e12612-ca6b-490d-8f34-82a73b415b76",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "u2nvsSeda2k2KXuH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50cd734b-9014-484d-ac05-653fef069f06",
+              "name": "output.queries",
+              "value": "={{ $('queries generator').item.json.output.queries }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        300,
+        1000
+      ],
+      "id": "7b32d401-f299-430f-9339-7d848110ac49",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the following contents from a SERP search for the query <query>{{ $('Item Ref').first().json.query }}</query>, generate a list of learnings from the contents. Return a maximum of 3 learnings, but feel free to return less if the contents are clear. Make sure each learning is unique and not similar to each other. The learnings should be concise and to the point, as detailed and infromation dense as possible. Make sure to include any entities like people, places, companies, products, things, etc in the learnings, as well as any exact metrics, numbers, or dates. The learnings will be used to research the topic further.\n\n\n<contents>\n{{\n$input\n  .all()\n  .map(item =>`<content>\\n${item.json.markdown.substr(0, 25_000)}\\n</content>`)\n  .join('\\n')\n}}\n</contents>",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=You are an expert researcher. Today is {{ $now.toLocaleString() }}. Follow these instructions when responding:   - You may be asked to research subjects that is after your knowledge cutoff, assume the user is right when presented with news.   - The user is a highly experienced analyst, no need to simplify it, be as detailed as possible and make sure your response is correct.   - Be highly organized.   - Suggest solutions that I didn't think about.   - Be proactive and anticipate my needs.   - Treat me as an expert in all subject matter.   - Mistakes erode my trust, so be accurate and thorough.   - Provide detailed explanations, I'm comfortable with lots of detail.   - Value good arguments over authorities, the source is irrelevant.   - Consider new technologies and contrarian ideas, not just the conventional wisdom.   - You may use high levels of speculation or prediction, just flag it for me."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        3540,
+        1220
+      ],
+      "id": "fcfac2ae-2b3a-4722-a364-cf8dee5da0f3",
+      "name": "DeepResearch Learnings1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "model": "mistral-small-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        3460,
+        1460
+      ],
+      "id": "6ee4147b-1870-4ed1-849e-8ff0446f0a8b",
+      "name": "Mistral Cloud Chat Model5",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "FUBpPeLJ2cTPaB5B",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"learnings\": {\n      \"type\": \"array\",\n      \"description\": \"List of learnings, max of 3.\",\n      \"items\": { \"type\": \"string\" }\n    }\n  }\n}\n"
+      },
+      "id": "e12cf2e1-331a-4cfb-a864-4c1e56c5d2b3",
+      "name": "Structured Output Parser3",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        3760,
+        1480
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer apify_api_rSf7Kf3JWfMp60sgQb5Tbv2XH9XEmb01Qczg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "queries",
+              "value": "={{$('Item Ref').item.json.query}}"
+            },
+            {
+              "name": "memory",
+              "value": 4096
+            },
+            {
+              "name": "timeout",
+              "value": 180
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        1340
+      ],
+      "id": "333b31ce-dc94-4448-a961-9cf9a8a805e9",
+      "name": "fetch url",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/extract",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "urls",
+              "value": "={{ $json.organicResults[0].url }}"
+            },
+            {
+              "name": "include_images",
+              "value": false
+            },
+            {
+              "name": "extract_depth",
+              "value": "basic"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2320,
+        1340
+      ],
+      "id": "ba709913-0872-40cd-b655-a1df28a46a35",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_results_new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "result_id",
+              "value": "={{ $json.result_Id }}"
+            },
+            {
+              "name": "research_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.research_id }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.user_id }}"
+            },
+            {
+              "name": "result",
+              "value": "={{ $('AI Agent').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        1740
+      ],
+      "id": "49bf9570-0c1c-4477-9de3-115d0aba1c26",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate Question ID Function Node\nconst progressId = `topic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;\nreturn { progress_Id: progressId };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        1320
+      ],
+      "id": "9f67fb0a-879b-413b-b225-ea7ea4637a2e",
+      "name": "ProgressId generator1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_progress_new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"progress_id\": \"{{ $json.progress_Id }}\",\n  \"research_id\": \"{{ $('When Executed by Another Workflow').item.json.research_id }}\",\n  \"user_id\": \"{{ $('When Executed by Another Workflow').item.json.user_id }}\",\n  \"topic\": \"{{ $('For Each Query...').item.json.query }}\",\n  \"links\": []\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        1320
+      ],
+      "id": "957faf8d-efb2-49ed-9569-ca6e74898693",
+      "name": "topic update"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_progress_new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"progress_id\": \"{{ $json.progress_Id }}\",\n  \"research_id\": \"{{ $('When Executed by Another Workflow').item.json.research_id }}\",\n  \"user_id\": \"{{ $('When Executed by Another Workflow').item.json.user_id }}\",\n  \"topic\": \"Preparing the Final Draft\",\n  \"links\": []\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        1540
+      ],
+      "id": "e2d7fe0e-e23e-415a-99b2-303a00a121dc",
+      "name": "topic update1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate Question ID Function Node\nconst progressId = `topic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;\nreturn { progress_Id: progressId };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        1360
+      ],
+      "id": "45401908-edcb-4bbc-b68b-e29ae3607487",
+      "name": "ProgressId generator2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_progress_new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"progress_id\": \"{{ $json.progress_Id }}\",\n  \"research_id\": \"{{ $('When Executed by Another Workflow').item.json.research_id }}\",\n  \"user_id\": \"{{ $('When Executed by Another Workflow').item.json.user_id }}\",\n  \"topic\": \"Ready\",\n  \"links\": []\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        1740
+      ],
+      "id": "f212f1ad-0f9c-42bf-934e-69c2499c3a26",
+      "name": "topic update2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate Question ID Function Node\nconst progressId = `topic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;\nreturn { progress_Id: progressId };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        1740
+      ],
+      "id": "eb86a744-620b-4a43-9b1c-85efcd646677",
+      "name": "ProgressId generator3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9acec2cc-64c8-4e62-bed4-c3d9ffab1379",
+              "name": "researchGoal",
+              "type": "string",
+              "value": "={{ $('Item Ref').first().json.researchGoal }}"
+            },
+            {
+              "id": "1b2d2dad-429b-4fc9-96c5-498f572a85c3",
+              "name": "learnings",
+              "type": "array",
+              "value": "={{ $('DeepResearch Learnings1').item.json.output.learnings }}"
+            },
+            {
+              "id": "c9e34ea4-5606-46d6-8d66-cb42d772a8b4",
+              "name": "urls",
+              "type": "array",
+              "value": "={{\n$('Get Markdown + URL1')\n  .all()\n  .map(item => item.json.url)\n}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6c9a6a2c-72db-4461-8231-d1b22d6c0cb8",
+      "name": "Research Goal + Learnings1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        4100,
+        1480
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/rpc/add_link_to_topic",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_progress_id",
+              "value": "={{ $('ProgressId generator1').item.json.progress_Id }}"
+            },
+            {
+              "name": "p_url",
+              "value": "={{ $('fetch url').item.json.organicResults[0].url }}"
+            },
+            {
+              "name": "p_title",
+              "value": "={{ $('fetch url').item.json.organicResults[0].title }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3000,
+        1220
+      ],
+      "id": "b5581bce-77f5-4133-b5fa-d7d38598da26",
+      "name": "Link updating"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are are an expert and insightful researcher in field of {{$('Switch').first().json.research_agent}}.\n* Given the following prompt from the user, write a final report on the topic using the learnings from research.\n* Make it as as detailed as possible, aim for 3 or more pages, include ALL the learnings from research without missing Anything.\n* Format the report in markdown. Use headings, lists and tables only and where appropriate in a structured way in format structure of {{ $('Switch').item.json.output_format }}, add source links at end or report.\ndont include anything parameters, just pure markdown with the content, no ``` also,pure MD text without others included, include all the Italic, Bolt, Underline effects for better results\n\n<prompt>{{ $('Switch').item.json.user_prompts }}</prompt>\n\nHere are all the learnings from previous research:\n\n<learnings>\n{{\n$('Switch').item.json.learnings\n  .map(item => `<learning>${item}</learning>`)  \n  .join('\\n')\n}}\n</learnings>\n<urls>\n{{ $('When Executed by Another Workflow').item.json.data.all_urls }}\n</urls>\ncreate maximum size of research suitable in context to breadth {{ $('Switch').item.json.breadth }} and depth {{ $('Switch').item.json.depth }}where 5 is maximum range.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        320,
+        1660
+      ],
+      "id": "9f0166ab-0aa5-4d30-a788-d4b9f46dd462",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst ResultId = `result-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;\nreturn { result_Id: ResultId };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1740
+      ],
+      "id": "93062bfc-81b6-4cb5-9bcc-def5d86c22cc",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://wurrqztgdnecgtmsisrq.supabase.co/rest/v1/research_history_new",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "research_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.research_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "completed"
+            },
+            {
+              "name": "completed_at",
+              "value": "2024-03-15T10:00:00Z"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        1740
+      ],
+      "id": "47555e72-e6db-4f02-be22-98544ae06bd0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "limitWaitTime": true,
+        "resumeAmount": 5,
+        "resumeUnit": "minutes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "f34fa8b1-b5fe-4251-8307-46a22b777ac8",
+      "name": "Wait",
+      "webhookId": "ac64076f-3bed-4c37-be78-4f410461d9c9",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "353f9cc0-85ba-4afc-b9aa-cff00a0f4a4e",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        2160
+      ],
+      "id": "dbd64d93-e328-4698-b8fc-c1c23cc94eb9",
+      "name": "Webhook1",
+      "webhookId": "353f9cc0-85ba-4afc-b9aa-cff00a0f4a4e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the following query from the user, ask some follow up questions to clarify the research direction. Return a maximum of 5 questions, but feel free to return less if the original query is clear: <query>{{ $json.body.query }}</query>`, based on depth={{ $json.body.depth }} and breadth={{ $json.body.breadth }} and include technical terms={{ $json.body.includeTechnicalTerms }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=You are an expert researcher. Today is {{ $now.toLocaleString() }}. Follow these instructions when responding:   - You may be asked to research subjects that is after your knowledge cutoff, assume the user is right when presented with news.   - The user is a highly experienced analyst, no need to simplify it, be as detailed as possible and make sure your response is correct.   - Be highly organized.   - Suggest solutions that I didn't think about.   - Be proactive and anticipate my needs.   - Treat me as an expert in all subject matter.   - Mistakes erode my trust, so be accurate and thorough.   - Provide detailed explanations, I'm comfortable with lots of detail.   - Value good arguments over authorities, the source is irrelevant.   - Consider new technologies and contrarian ideas, not just the conventional wisdom.   - You may use high levels of speculation or prediction, just flag it for me."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -220,
+        2160
+      ],
+      "id": "80f1433f-546d-43c7-9694-eb6f39156d77",
+      "name": "Basic LLM Chain1",
+      "retryOnFail": true,
+      "waitBetweenTries": 200
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        2380
+      ],
+      "id": "6b1ab1db-92de-486f-bf78-6d7eefd6b767",
+      "name": "Mistral Cloud Chat Model2",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "FUBpPeLJ2cTPaB5B",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"questions\": {\n      \"type\": \"array\",\n      \"description\": \"Follow up questions to clarify the research direction.\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\",\n            \"description\": \"Unique identifier for the question\"\n          },\n          \"text\": {\n            \"type\": \"string\",\n            \"description\": \"The question text\"\n          },\n          \"answered\": {\n            \"type\": \"boolean\",\n            \"description\": \"Whether the question has been answered\",\n            \"default\": false\n          }\n        },\n        \"required\": [\"id\", \"text\", \"answered\"]\n      }\n    }\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        2380
+      ],
+      "id": "0dda18ee-e536-46d9-a9f9-6afd0820985c",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.output.questions) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        2160
+      ],
+      "id": "560476ef-168e-43e9-b374-89d979d39510",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "QuestionId generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start research": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QuestionId generator": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProgressId generator": {
+      "main": [
+        [
+          {
+            "node": "Start research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Set Initial Query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "queries generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ProgressId generator2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "queries generator": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "queries generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "For Each Query...",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Ref": {
+      "main": [
+        [
+          {
+            "node": "ProgressId generator1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For Each Query...": {
+      "main": [
+        [
+          {
+            "node": "Combine & Send back to Loop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Item Ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empty Response": {
+      "main": [
+        [
+          {
+            "node": "For Each Query...",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Content?": {
+      "main": [
+        [
+          {
+            "node": "Link updating",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Empty Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Markdown + URL1": {
+      "main": [
+        [
+          {
+            "node": "DeepResearch Learnings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "queries generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Initial Query1": {
+      "main": [
+        [
+          {
+            "node": "Generate Learnings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accumulate Results2": {
+      "main": [
+        [
+          {
+            "node": "Is Depth Reached?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepResearch Results1": {
+      "main": [
+        [
+          {
+            "node": "Results to Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Results to Items1": {
+      "main": [
+        [
+          {
+            "node": "Set Next Queries1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Next Queries1": {
+      "main": [
+        [
+          {
+            "node": "Generate Learnings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Depth Reached?1": {
+      "main": [
+        [
+          {
+            "node": "Get Research Results1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DeepResearch Results1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Research Results1": {
+      "main": [
+        [
+          {
+            "node": "Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Learnings1": {
+      "main": [
+        [
+          {
+            "node": "Accumulate Results2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepResearch Learnings1": {
+      "main": [
+        [
+          {
+            "node": "Research Goal + Learnings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "DeepResearch Learnings1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "DeepResearch Learnings1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch url": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Has Content?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProgressId generator1": {
+      "main": [
+        [
+          {
+            "node": "topic update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topic update": {
+      "main": [
+        [
+          {
+            "node": "fetch url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProgressId generator2": {
+      "main": [
+        [
+          {
+            "node": "topic update1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topic update1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProgressId generator3": {
+      "main": [
+        [
+          {
+            "node": "topic update2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Goal + Learnings1": {
+      "main": [
+        [
+          {
+            "node": "For Each Query...",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link updating": {
+      "main": [
+        [
+          {
+            "node": "Get Markdown + URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "ProgressId generator3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topic update2": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "ProgressId generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3b464122-b8d7-4f63-8d39-7a81825601b4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e3b154747a861bec3b66e39baf8c9bd7c22ad1c79ced230a3c3ed8b7ccf1dc2"
+  },
+  "id": "XlDtaOf3AgIkpVJ9",
+  "tags": []
+}

@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "Royal Research",
+    "slug": "royal-research",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/splash-icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.royalresearch.app",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/splash-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "com.royalresearch.app",
+      "versionCode": 1,
+      "permissions": ["NOTIFICATIONS"],
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/splash-icon.png",
+      "bundler": "metro",
+      "build": {
+        "babel": {
+          "include": []
+        }
+      }
+    },
+    "plugins": [
+      "expo-image-picker",
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/splash-icon.png",
+          "color": "#4A00E0",
+          "sounds": [
+            "./assets/notification.wav"
+          ]
+        }
+      ]
+    ],
+    "sdkVersion": "52.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "63d252ab-ce8f-4c3c-bc6e-8e8168b6ecf4"
+      },
+      "SUPABASE_URL": "https://wurrqztgdnecgtmsisrq.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cnJxenRnZG5lY2d0bXNpc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMjU5NTYsImV4cCI6MjA1ODgwMTk1Nn0.Cwke6VXDuTvQmaEgk-QKw_hwhQmrpNG_34l0gob_6NA",
+      "N8N_WEBHOOK_URL": "https://atomic123.app.n8n.cloud/webhook-test/055cedaa-a313-4625-a41c-7e7f9560b7a3"
+    },
+    "scheme": "com.royalresearch.app"
+  }
+}

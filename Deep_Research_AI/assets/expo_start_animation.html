@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Research App Start Animation</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        body { 
+            overflow: hidden; 
+            touch-action: none; 
+            background: #000022; /* Darker blue background */
+            font-family: 'Courier New', monospace;
+        }
+        canvas { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: 1;
+        }
+        #start-button-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+        }
+        #start-button {
+            background-color: rgba(15, 82, 186, 0.3);
+            color: #ffffff;
+            border: 2px solid rgba(77, 182, 172, 0.8);
+            border-radius: 30px;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(77, 182, 172, 0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        #start-button:hover {
+            background-color: rgba(77, 182, 172, 0.4);
+            box-shadow: 0 0 30px rgba(77, 182, 172, 0.6);
+        }
+        .title {
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(77, 182, 172, 0.6);
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-button-container">
+        <div class="title">RESEARCH ASSISTANT</div>
+        <button id="start-button">Get Started</button>
+    </div>
+
+    <!-- Load scripts from local paths -->
+    <script src="../lib/three.min.js"></script>
+    <script src="../lib/gsap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track button clicks
+            const startButton = document.getElementById('start-button');
+            startButton.addEventListener('click', function() {
+                // Send message to React Native
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage('GET_STARTED_CLICKED');
+                }
+            });
+        });
+
+        const CONFIG = {
+            NODE_COUNT: 80,  // Fewer nodes for cleaner look
+            COLORS: {
+                NODE_CORE: '#4DB6AC',           // Teal core
+                NODE_GLOW: 'rgba(77, 182, 172, 0.3)',  // Teal glow
+                NODE_PULSE: 'rgba(77, 182, 172, 0.9)',
+                CONNECTION: '#3F51B5',          // Indigo connections
+                PACKET: '#64B5F6',              // Light blue packets
+                BACKGROUND: '#000022',          // Dark blue background
+                TEXT: '#E0F7FA'                 // Light cyan text
+            },
+            MOVEMENT: {
+                SCROLL_SENSITIVITY: 0.00015,
+                PACKET_SPEED: 0.005,
+                CAMERA_ROTATION_SPEED: 0.0003,  // Auto-rotate camera
+                PULSE_INTERVAL: 3000
+            },
+            STRUCTURE: {
+                CORE_RADIUS: 20,
+                LAYER_COUNT: 2,
+                RANDOMNESS: 0.3,                // Less randomness for more structure
+                MIN_CONNECTIONS: 2,
+                CONNECTION_DISTANCE: 25,
+                PACKET_REDUCTION: 0.4           // Show fewer packets
+            }
+        };
+
+        let scene, camera, renderer;
+        let nodes = [], connections = [], packets = [];
+        let autoRotateY = 0;
+        let pulseTimer;
+
+        class NeuralNode {
+            constructor(position) {
+                // Create outer glow sphere with teal color
+                this.glowGeometry = new THREE.SphereGeometry(0.6, 16, 16);
+                this.glowMaterial = new THREE.MeshBasicMaterial({
+                    color: CONFIG.COLORS.NODE_GLOW,
+                    transparent: true,
+                    opacity: 0.5,
+                    blending: THREE.AdditiveBlending
+                });
+                this.glowMesh = new THREE.Mesh(this.glowGeometry, this.glowMaterial);
+                
+                // Main node geometry - smaller core with teal color
+                this.mesh = new THREE.Mesh(
+                    new THREE.IcosahedronGeometry(0.22, 2),
+                    new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(CONFIG.COLORS.NODE_CORE),
+                        emissive: new THREE.Color(CONFIG.COLORS.NODE_GLOW),
+                        emissiveIntensity: 0.7,
+                        metalness: 0.3, 
+                        roughness: 0.6,
+                        opacity: 1.0
+                    })
+                );
+
+                // Group for both meshes
+                this.group = new THREE.Group();
+                this.group.add(this.mesh);
+                this.group.add(this.glowMesh);
+                this.group.position.copy(position);
+                
+                // Pulse state
+                this.isPulsing = false;
+                this.baseScale = new THREE.Vector3(1, 1, 1);
+                this.mesh.scale.copy(this.baseScale);
+                
+                // Connection tracking
+                this.connections = 0;
+            }
+            
+            pulse() {
+                if (!this.isPulsing) {
+                    this.isPulsing = true;
+                    
+                    // Animate the core
+                    gsap.timeline()
+                        .to(this.mesh.material, {
+                            emissiveIntensity: 1.5,
+                            duration: 1.0,
+                            ease: "sine.inOut"
+                        })
+                        .to(this.mesh.material, {
+                            emissiveIntensity: 0.7,
+                            duration: 1.0,
+                            ease: "sine.out"
+                        });
+                    
+                    // Animate the glow
+                    gsap.timeline()
+                        .to(this.glowMaterial, {
+                            opacity: 0.8,
+                            duration: 0.8,
+                            ease: "sine.inOut"
+                        })
+                        .to(this.glowMaterial, {
+                            opacity: 0.5,
+                            duration: 1.2,
+                            ease: "sine.out",
+                            onComplete: () => {
+                                this.isPulsing = false;
+                            }
+                        });
+                    
+                    // Subtle scale animation
+                    gsap.timeline()
+                        .to(this.glowMesh.scale, {
+                            x: 1.2, 
+                            y: 1.2, 
+                            z: 1.2,
+                            duration: 0.8,
+                            ease: "sine.out"
+                        })
+                        .to(this.glowMesh.scale, {
+                            x: 1.0, 
+                            y: 1.0, 
+                            z: 1.0,
+                            duration: 1.2,
+                            ease: "sine.inOut"
+                        });
+                }
+            }
+        }
+
+        class DataPacket {
+            constructor(start, end) {
+                this.geometry = new THREE.SphereGeometry(0.15, 8, 8);
+                this.material = new THREE.MeshBasicMaterial({
+                    color: CONFIG.COLORS.PACKET,
+                    transparent: true
+                });
+                
+                this.mesh = new THREE.Mesh(this.geometry, this.material);
+                this.start = start.clone();
+                this.end = end.clone();
+                this.progress = Math.random();
+            }
+
+            update() {
+                this.progress = (this.progress + CONFIG.MOVEMENT.PACKET_SPEED) % 1;
+                this.mesh.position.lerpVectors(this.start, this.end, this.progress);
+                
+                // Blinking effect
+                this.material.opacity = Math.sin(this.progress * Math.PI) * 0.8 + 0.2;
+            }
+        }
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(CONFIG.COLORS.BACKGROUND);
+            document.body.appendChild(renderer.domElement);
+
+            // Complete initialization
+            completeInit();
+        }
+
+        function completeInit() {
+            // Lighting - add blue ambient light for mood
+            const ambientLight = new THREE.AmbientLight(0x3f51b5, 0.1);
+            const pointLight = new THREE.PointLight(CONFIG.COLORS.NODE_CORE, 0.7, 50);
+            pointLight.position.set(10, 10, 10);
+            scene.add(ambientLight, pointLight);
+
+            // Create network
+            createNodes();
+            createConnections();
+            createDataPackets();
+
+            // Camera setup - positioned to better view the network
+            camera.position.set(0, 0, 40);
+
+            // Event listeners
+            window.addEventListener('resize', onResize);
+
+            // Start the pulse timer
+            startPulseTimer();
+            
+            // Start animation loop
+            animate();
+        }
+
+        function startPulseTimer() {
+            if (pulseTimer) clearInterval(pulseTimer);
+            
+            pulseTimer = setInterval(() => {
+                triggerRandomNodesPulse();
+            }, CONFIG.MOVEMENT.PULSE_INTERVAL);
+        }
+        
+        function triggerRandomNodesPulse() {
+            // Select random 1/6 of nodes to pulse for more subtle effect
+            const nodesToPulse = Math.floor(nodes.length / 6);
+            const shuffled = [...nodes].sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, nodesToPulse);
+            
+            selected.forEach(node => node.pulse());
+        }
+
+        function createNodes() {
+            const nodePositions = [];
+            
+            // Create a flattened galaxy-like arrangement
+            
+            // Central cluster
+            const coreCount = Math.floor(CONFIG.NODE_COUNT * 0.2);
+            for(let i = 0; i < coreCount; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const radius = CONFIG.STRUCTURE.CORE_RADIUS * 0.3 * Math.random();
+                
+                // Create positions in a flatter, more disk-like shape
+                const position = new THREE.Vector3(
+                    radius * Math.cos(theta),
+                    (Math.random() - 0.5) * 2,  // Much flatter on Y axis
+                    radius * Math.sin(theta)
+                );
+                
+                nodePositions.push(position);
+            }
+            
+            // Spiral arms
+            const armCount = 4;
+            const nodesPerArm = Math.floor((CONFIG.NODE_COUNT - coreCount) / armCount);
+            
+            for(let arm = 0; arm < armCount; arm++) {
+                const armOffset = (arm / armCount) * Math.PI * 2;
+                
+                for(let i = 0; i < nodesPerArm; i++) {
+                    const ratio = i / nodesPerArm;
+                    const spiralRadius = 5 + ratio * CONFIG.STRUCTURE.CORE_RADIUS;
+                    const theta = armOffset + ratio * Math.PI * 2 * 1.5; // 1.5 rotations
+                    
+                    const position = new THREE.Vector3(
+                        spiralRadius * Math.cos(theta),
+                        (Math.random() - 0.5) * 4, // Flatter on Y but some variance
+                        spiralRadius * Math.sin(theta)
+                    );
+                    
+                    // Add subtle randomness
+                    position.x += (Math.random() - 0.5) * CONFIG.STRUCTURE.RANDOMNESS * 10;
+                    position.z += (Math.random() - 0.5) * CONFIG.STRUCTURE.RANDOMNESS * 10;
+                    
+                    nodePositions.push(position);
+                }
+            }
+            
+            // Fill any remaining nodes
+            while(nodePositions.length < CONFIG.NODE_COUNT) {
+                const theta = Math.random() * Math.PI * 2;
+                const radius = 5 + Math.random() * CONFIG.STRUCTURE.CORE_RADIUS;
+                
+                const position = new THREE.Vector3(
+                    radius * Math.cos(theta),
+                    (Math.random() - 0.5) * 4,
+                    radius * Math.sin(theta)
+                );
+                
+                nodePositions.push(position);
+            }
+
+            // Create nodes
+            nodes = nodePositions.map(pos => {
+                const node = new NeuralNode(pos);
+                scene.add(node.group);
+                return node;
+            });
+        }
+
+        function createConnections() {
+            const connectionMaterial = new THREE.LineBasicMaterial({
+                color: CONFIG.COLORS.CONNECTION,
+                transparent: true,
+                opacity: 0.4,
+                blending: THREE.AdditiveBlending
+            });
+
+            // Connect nodes that are close to each other and in the same approximate plane
+            nodes.forEach((nodeA) => {
+                const nearbyNodes = nodes
+                    .filter(nodeB => nodeB !== nodeA)
+                    .map(nodeB => ({
+                        node: nodeB,
+                        distance: nodeA.group.position.distanceTo(nodeB.group.position)
+                    }))
+                    .sort((a, b) => a.distance - b.distance);
+                
+                // Make fewer, more deliberate connections
+                const connectionsToMake = Math.min(3, Math.ceil(Math.random() * 3));
+                
+                for (let i = 0; i < nearbyNodes.length && nodeA.connections < connectionsToMake; i++) {
+                    const { node: nodeB, distance } = nearbyNodes[i];
+                    
+                    // Only connect close nodes
+                    if (distance < CONFIG.STRUCTURE.CONNECTION_DISTANCE) {
+                        // Avoid too many cross-connections (more planar connections)
+                        if (Math.abs(nodeA.group.position.y - nodeB.group.position.y) < 3) {
+                            const geometry = new THREE.BufferGeometry().setFromPoints([
+                                nodeA.group.position,
+                                nodeB.group.position
+                            ]);
+                            const line = new THREE.Line(geometry, connectionMaterial);
+                            connections.push(line);
+                            scene.add(line);
+                            
+                            nodeA.connections++;
+                            nodeB.connections++;
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDataPackets() {
+            // Reduce packets by 40%
+            const connectionCount = connections.length;
+            const packetCount = Math.floor(connectionCount * (1 - CONFIG.STRUCTURE.PACKET_REDUCTION));
+            
+            const shuffledConnections = [...connections].sort(() => 0.5 - Math.random());
+            const selectedConnections = shuffledConnections.slice(0, packetCount);
+            
+            selectedConnections.forEach(conn => {
+                const start = conn.geometry.attributes.position.array.slice(0, 3);
+                const end = conn.geometry.attributes.position.array.slice(3, 6);
+                
+                const packet = new DataPacket(
+                    new THREE.Vector3().fromArray(start),
+                    new THREE.Vector3().fromArray(end)
+                );
+                
+                scene.add(packet.mesh);
+                packets.push(packet);
+            });
+        }
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Auto-rotate the scene slowly
+            autoRotateY += CONFIG.MOVEMENT.CAMERA_ROTATION_SPEED;
+            const radius = 40;
+            camera.position.x = Math.sin(autoRotateY) * radius;
+            camera.position.z = Math.cos(autoRotateY) * radius;
+            camera.lookAt(scene.position);
+
+            // Update packets
+            packets.forEach(packet => packet.update());
+
+            // Ambient node animation
+            nodes.forEach((node, i) => {
+                // Subtle ambient glow pulsation
+                if (!node.isPulsing) {
+                    const time = Date.now() * 0.001;
+                    const glowFactor = 0.5 + Math.sin(time * 0.5 + i * 0.2) * 0.1;
+                    node.glowMaterial.opacity = glowFactor;
+                    
+                    // Subtle scale for core
+                    const baseScale = 1 + Math.sin(time * 2 + i * 0.3) * 0.05;
+                    node.mesh.scale.setScalar(baseScale);
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
