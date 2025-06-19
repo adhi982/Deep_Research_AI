@@ -29,7 +29,47 @@ yarn-error.*
 *.pem
 
 # local env files
+.env*
+.env.*
 .env*.local
+env.download
+
+# Sensitive config and credentials
+app.config.js
+app.json # contains keys in extra
+backend/services/debugEnv.js
+backend/services/testSendResearchQuery.js
+
+# Google services
+google-services.json
+
+# Local storage and user data
+local_storage/
+
+# Research history and workflow exports
+research_n8n.json
+
+# Supabase schema (if contains sensitive info)
+supabase/schema.sql
 
 # typescript
 *.tsbuildinfo
+
+# Ignore lock files if not needed in repo
+# package-lock.json
+yarn.lock
+
+# Ignore OS-specific files
+Thumbs.db
+Desktop.ini
+
+# Ignore logs
+*.log
+
+# Ignore backups
+*.bak
+*.tmp
+
+# Ignore IDE/editor folders
+.vscode/
+.idea/
